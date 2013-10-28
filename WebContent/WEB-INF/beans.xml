@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+	xmlns:cxf="http://cxf.apache.org/core" 
+	xsi:schemaLocation="
+http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://cxf.apache.org/jaxrs
+http://cxf.apache.org/schemas/jaxrs.xsd
+http://cxf.apache.org/core 
+http://cxf.apache.org/schemas/core.xsd">
+
+	<!-- do not use import statements if CXFServlet init parameters link to 
+		this beans.xml -->
+
+	<import resource="classpath:META-INF/cxf/cxf.xml" />
+	<import resource="classpath:META-INF/cxf/cxf-servlet.xml" />
+
+	<jaxrs:server id="DevipuramServices" address="/services">
+		<jaxrs:serviceBeans>
+			<ref bean="userService" />
+		</jaxrs:serviceBeans>
+	
+	<jaxrs:extensionMappings>
+    <entry key="json" value="application/json"/>
+    <entry key="xml" value="application/xml"/>
+  </jaxrs:extensionMappings>
+	<jaxrs:providers>
+	<bean class="org.apache.cxf.jaxrs.provider.json.JSONProvider">
+	<property name="dropRootElement" value="true" />
+	<property name="supportUnwrapped" value="true" />
+	</bean>
+	<ref bean="jaxbProvider"/>
+	</jaxrs:providers>
+	<jaxrs:features> 
+      <cxf:logging/> 
+    </jaxrs:features> 
+	
+	</jaxrs:server>
+
+	
+<bean id="depthProperties" class="org.apache.cxf.staxutils.DocumentDepthProperties">
+  <property name="innerElementCountThreshold" value="500"/>
+</bean> 
+ 
+<bean id="jaxbProvider" class="org.apache.cxf.jaxrs.provider.JAXBElementProvider">
+  <property name="depthProperties" ref="depthProperties"/>
+</bean> 
+
+	<bean id="userService" class="com.jas.devipuram.service.UserService">
+		<property name="devipuramDAO" ref="devipuramDAO" />
+	
+	</bean>
+
+	<bean id="applicationProperties"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location" value="classpath:dpservices.properties" />
+	</bean>
+
+	<bean id="parentDataSource" destroy-method="close"
+		class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName" value="${db.driver}" />
+		<property name="validationQuery" value="select 1" />
+		<property name="testOnBorrow" value="true"></property>
+	</bean>
+
+
+
+	<bean id="dbcpBean" parent="parentDataSource">
+		<property name="url" value="${db.url}" />
+		<property name="username" value="${db.user}" />
+		<property name="password" value="${db.pass}" />
+	</bean>
+	
+	
+	
+
+	<!-- JDBC Template and Data Source Configuration -->
+	<bean id="jdbcTemplateBean" class="org.springframework.jdbc.core.JdbcTemplate"
+		abstract="false" lazy-init="default" autowire="default">
+		<constructor-arg index="0" type="javax.sql.DataSource">
+			<ref bean="dbcpBean"></ref>
+		</constructor-arg>
+	</bean>
+
+	
+
+
+
+	<bean id="devipuramDAO" class="com.jas.devipuram.dao.DevipuramDAO">
+		<property name="jdbcTemplate" ref="jdbcTemplateBean" />
+	</bean>
+
+
+	
+
+</beans>
