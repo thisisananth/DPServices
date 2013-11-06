@@ -20,7 +20,11 @@ http://cxf.apache.org/schemas/core.xsd">
 	<jaxrs:server id="DevipuramServices" address="/services">
 		<jaxrs:serviceBeans>
 			<ref bean="userService" />
+			<ref bean="reportService" />
 		</jaxrs:serviceBeans>
+		
+			
+		
 	
 	<jaxrs:extensionMappings>
     <entry key="json" value="application/json"/>
@@ -49,6 +53,11 @@ http://cxf.apache.org/schemas/core.xsd">
 </bean> 
 
 	<bean id="userService" class="com.jas.devipuram.service.UserService">
+		<property name="devipuramDAO" ref="devipuramDAO" />
+	
+	</bean>
+	
+	<bean id="reportService" class="com.jas.devipuram.service.ReportService">
 		<property name="devipuramDAO" ref="devipuramDAO" />
 	
 	</bean>
