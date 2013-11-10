@@ -2,10 +2,6 @@ package com.jas.devipuram.service;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -15,12 +11,15 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.log4j.Logger;
+
 import com.jas.devipuram.dao.DevipuramDAO;
 
 @Path("/reports/")
 @Produces("text/xml,application/xml,application/json")
 public class ReportService {
 	private DevipuramDAO devipuramDAO;
+	Logger log = Logger.getLogger(this.getClass().getName());
 
 	public DevipuramDAO getDevipuramDAO() {
 		return devipuramDAO;
@@ -128,6 +127,8 @@ public class ReportService {
 			) {
 		
 		String query="";
+		log.info("videoId is"+ videoId);
+		log.info("type:"+type);
 		if(videoId!=null && videoId.equals("1") && type!=null && type.equals("start")){
 			query = DevipuramDAO.VIDEO_1_STARTS;
 			
@@ -141,6 +142,7 @@ public class ReportService {
 			query = DevipuramDAO.VIDEO_2_ENDS;
 			
 		}else if(videoId!=null && videoId.equals("all") && type!=null && type.equals("end")){
+			log.info("setting query to all videos");
 			query = DevipuramDAO.ALL_VIDEOS_COMP;
 			
 		}else if(videoId!=null && videoId.equals("all") && type!=null && type.equals("start")){

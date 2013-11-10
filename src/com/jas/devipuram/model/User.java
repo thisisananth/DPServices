@@ -34,7 +34,7 @@ public class User {
 	@XmlElement(name="password")
 	private String password;
 	
-	@XmlElement(name="confirmPassword")
+	@XmlElement(name="confirm")
 	private String confirmPassword;
 
 	public String getConfirmPassword() {

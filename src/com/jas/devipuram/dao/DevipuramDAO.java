@@ -48,8 +48,8 @@ public class DevipuramDAO {
 			+ "to_date(?, 'DD-Mon-YYYY') and evt_id=2";
 
 	// Logins for a user between two dates
-	private static String USER_LOGIN_BW_DATES = "select * from evt_audit where date_created between to_timestamp(?, 'DD-Mon-YYYY') and 	"
-			+ "to_timestamp(?, 'DD-Mon-YYYY') and evt_id=2 and learner_id=?";
+	private static String USER_LOGIN_BW_DATES = "select * from evt_audit where date_trunc('day',date_created)" +
+			" between to_date(?, 'DD-Mon-YYYY') and to_date(?, 'DD-Mon-YYYY') and evt_id=2 and learner_id=?";
 
 	// Number of people started video 1
 	public static String VIDEO_1_STARTS = "select learner_id,date_created from evt_audit where evt_id=3";
@@ -183,6 +183,8 @@ public class DevipuramDAO {
 	// Number of people started video 1
 	// Logins for a user between two dates
 		public byte[] getVideoStats(String query) {
+			
+			log.info("Query is"+ query);
 			
 			byte[] data = (byte[]) jdbcTemplate.query(query,
 					new Object[] { }, new DataByteArrayExtractor());

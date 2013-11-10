@@ -12,6 +12,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import com.jas.devipuram.dao.DevipuramDAO;
@@ -71,8 +72,8 @@ public class UserService  {
 				
 				
 				
-			}catch(Exception e){
-				
+			}catch(DuplicateKeyException e){
+				e.printStackTrace();
 				status.setCode(406);
 				status.setDescription("Not Acceptable");
 				List errors = new ArrayList();
@@ -83,6 +84,17 @@ public class UserService  {
 				status.setErrors(errors);
 				response.setStatus(status);
 				
+			}catch(Exception e){
+				e.printStackTrace();
+				status.setCode(408);
+				status.setDescription("Not Acceptable");
+				List errors = new ArrayList();
+				Error error= new Error();
+				error.setErrorCode(411);
+				error.setDescription(e.getMessage());
+				errors.add(error);
+				status.setErrors(errors);
+				response.setStatus(status);
 			}
 			
 			return response;
