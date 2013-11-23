@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -11,6 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -18,6 +20,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import com.jas.devipuram.dao.DevipuramDAO;
 import com.jas.devipuram.dao.EventConstants;
 import com.jas.devipuram.model.AuditResponse;
+import com.jas.devipuram.model.ConfirmSubResponse;
 import com.jas.devipuram.model.Error;
 import com.jas.devipuram.model.LoginData;
 import com.jas.devipuram.model.LoginResponse;
@@ -187,5 +190,85 @@ public class UserService  {
 			return response;
 			
 		}
+		
+		
+		
+		//Update payment details 
+		//send checkout code in email.
+		/*payment_id
+	quantity
+	status
+	offer_slug
+	offer_title
+	buyer
+	unit_price
+	amount
+	fees
+	mac */
+		
+		@POST
+		@Path("/payment/")
+		@Produces({"application/xml","application/json"})
+		public void auditPayment(@FormParam("payment_id") Long paymentId,@FormParam("quantity") int quantity,
+				@FormParam("status") String status,@FormParam("offer_title") String offerTitle,@FormParam("buyer") String buyerEmail,
+				@FormParam("unit_price") Integer unitPrice,@FormParam("amount") Integer amount,@FormParam("fees") Integer fees,
+				@FormParam("mac") String mac){
+			
+			long paymentAudId = devipuramDAO.createPaymentAudit(paymentId, quantity, status, offerTitle, buyerEmail, unitPrice, amount, fees);
+			
+			
+			//if(status.equals("success"))
+			
+			//Generate unique code
+			String checkoutCode = RandomStringUtils.random(16,true,true);
+			
+			//save the checkoutCode
+			devipuramDAO.saveCheckoutCode(paymentAudId, checkoutCode);
+			
+			//Check if email already exists and link it
+			devipuramDAO.linkExistingEmail(buyerEmail, checkoutCode);
+			
+			
+			
+			
+			
+			
+		}
+		@POST
+		@Path("/confirmPayment/")
+		@Produces({"application/xml","application/json"})
+		public ConfirmSubResponse confirmSubscription(@FormParam("userId") Long learnerId,@FormParam("checkout") String checkoutCode){
+			
+			ConfirmSubResponse response = new ConfirmSubResponse();
+			Status status = new Status();
+			
+			//If checkout code exists and learner exists link them
+			boolean valid = devipuramDAO.verifyCheckoutCode(checkoutCode);
+			if(valid){
+				//Link the  learner with the coupon
+				devipuramDAO.updateCheckout(learnerId,checkoutCode);
+				
+				
+				status.setCode(200);
+				status.setDescription("OK");
+				response.setStatus(status);
+			}else{
+				status.setCode(401);
+				status.setDescription("Unable to confirm subscription");
+				List errors = new ArrayList();
+				Error error= new Error();
+				error.setErrorCode(413);
+				error.setDescription("Sorry, the checkout code doesn't exist or is already linked.");
+				errors.add(error);
+				status.setErrors(errors);
+				response.setStatus(status);
+			}
+			
+			return response;
+			
+			
+		}
+		
+		
 
 }

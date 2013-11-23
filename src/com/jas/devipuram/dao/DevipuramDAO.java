@@ -3,8 +3,10 @@ package com.jas.devipuram.dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -48,8 +50,8 @@ public class DevipuramDAO {
 			+ "to_date(?, 'DD-Mon-YYYY') and evt_id=2";
 
 	// Logins for a user between two dates
-	private static String USER_LOGIN_BW_DATES = "select * from evt_audit where date_trunc('day',date_created)" +
-			" between to_date(?, 'DD-Mon-YYYY') and to_date(?, 'DD-Mon-YYYY') and evt_id=2 and learner_id=?";
+	private static String USER_LOGIN_BW_DATES = "select * from evt_audit where date_trunc('day',date_created)"
+			+ " between to_date(?, 'DD-Mon-YYYY') and to_date(?, 'DD-Mon-YYYY') and evt_id=2 and learner_id=?";
 
 	// Number of people started video 1
 	public static String VIDEO_1_STARTS = "select learner_id,date_created from evt_audit where evt_id=3";
@@ -173,31 +175,105 @@ public class DevipuramDAO {
 	}
 
 	// Logins for a user between two dates
-	public byte[] getLoginsForUser(long userId,String startDate,String endDate) {
+	public byte[] getLoginsForUser(long userId, String startDate, String endDate) {
 		byte[] data = (byte[]) jdbcTemplate.query(USER_LOGIN_BW_DATES,
-				new Object[] { startDate,endDate,userId }, new DataByteArrayExtractor());
+				new Object[] { startDate, endDate, userId },
+				new DataByteArrayExtractor());
 
 		return data;
 	}
 
 	// Number of people started video 1
 	// Logins for a user between two dates
-		public byte[] getVideoStats(String query) {
-			
-			log.info("Query is"+ query);
-			
-			byte[] data = (byte[]) jdbcTemplate.query(query,
-					new Object[] { }, new DataByteArrayExtractor());
+	public byte[] getVideoStats(String query) {
 
-			return data;
+		log.info("Query is" + query);
+
+		byte[] data = (byte[]) jdbcTemplate.query(query, new Object[] {},
+				new DataByteArrayExtractor());
+
+		return data;
+	}
+
+	// Insert into payment_audit table.
+
+	public long createPaymentAudit(final Long paymentId, final int quantity,
+			final String status, final String offerTitle,
+			final String buyerEmail, final int unitPrice, final int amount,
+			final int fees) {
+		final String INSERT_SQL = "insert into payment_audit(buyer_email,payment_id,quantity,"
+				+ "status,offer_title,unit_price,amount,fees,payment_date) values(?,?,?,?,?,?,?,?,current_timestamp)";
+
+		KeyHolder keyHolder = new GeneratedKeyHolder();
+		jdbcTemplate.update(new PreparedStatementCreator() {
+			public PreparedStatement createPreparedStatement(
+					Connection connection) throws SQLException {
+				PreparedStatement ps = connection.prepareStatement(INSERT_SQL,
+						new String[] { "id" });
+				ps.setString(1, buyerEmail);
+				ps.setLong(2, paymentId);
+				ps.setInt(3, quantity);
+				ps.setString(4, status);
+				ps.setString(5, offerTitle);
+				ps.setInt(6, unitPrice);
+				ps.setInt(7, amount);
+				ps.setInt(8, fees);
+
+				return ps;
+			}
+		}, keyHolder);
+		Number key = keyHolder.getKey();
+
+		return key.longValue();
+	}
+	
+	public void saveCheckoutCode(final long paymentAudId,final String checkoutCode){
+		final String sql = "insert into payments(coupon_code,payment_aud_id,date_created) values(?,?,current_timestamp)";
+		jdbcTemplate.update(sql, new Object[] { checkoutCode, paymentAudId });
+	}
+	
+	
+	
+	
+	public void linkExistingEmail(String email,String checkoutCode){
+		final String sql  = "select id from learner where email=?";
+		long userId=0;
+		try{
+			 userId = jdbcTemplate.queryForLong(sql, new Object[]{email});
+		}catch(IncorrectResultSizeDataAccessException rse){
+			log.info("User not found with the email.");
 		}
-
-	// Number of people started video 2
-
-	// Number of people completed video 1
-
-	// Number of people completed video 2
-
-	// Number of people who completed both videos
+		if(userId!=0){
+			updateCheckout(userId, checkoutCode);
+		}
+	}
+	
+	
+	
+	
+	public boolean verifyCheckoutCode(String checkOutCode){
+		
+		boolean valid = false;
+		String query = "select learner_id,id from payments where coupon_code=?";
+		Map result = jdbcTemplate.queryForMap(query, new Object[]{});
+		
+		if(result!=null){
+			Long id = (Long) result.get("id");
+			Long userId=(Long)result.get("learner_id");
+			if(id!=null && userId==null){
+				valid=true;
+			}
+		}
+		
+		
+		return valid;
+		
+	}
+	
+	
+	public void updateCheckout(long userId,String checkoutCode){
+		final String sql = "update payments set learner_id = ? where coupon_code = ? ";
+		jdbcTemplate.update(sql,new Object[]{userId,checkoutCode});
+	}
 
 }
