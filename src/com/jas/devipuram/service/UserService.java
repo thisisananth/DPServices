@@ -1,5 +1,7 @@
 package com.jas.devipuram.service;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -209,12 +211,25 @@ public class UserService  {
 		@POST
 		@Path("/payment/")
 		@Produces({"application/xml","application/json"})
-		public void auditPayment(@FormParam("payment_id") Long paymentId,@FormParam("quantity") int quantity,
+		public void auditPayment(@FormParam("payment_id") String paymentId,@FormParam("quantity") Integer quantity,
 				@FormParam("status") String status,@FormParam("offer_title") String offerTitle,@FormParam("buyer") String buyerEmail,
-				@FormParam("unit_price") Integer unitPrice,@FormParam("amount") Integer amount,@FormParam("fees") Integer fees,
+				@FormParam("unit_price") Float unitPrice,@FormParam("amount") Float amount,@FormParam("fees") Float fees,
 				@FormParam("mac") String mac){
 			
-			long paymentAudId = devipuramDAO.createPaymentAudit(paymentId, quantity, status, offerTitle, buyerEmail, unitPrice, amount, fees);
+			System.out.println("DAO:"+devipuramDAO);
+			
+			
+			if(buyerEmail!=null){
+				try {
+					buyerEmail = URLDecoder.decode(buyerEmail, "UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					
+					e.printStackTrace();
+				}
+			}
+			
+			long paymentAudId = 0;
+					devipuramDAO.createPaymentAudit(paymentId, quantity, status, offerTitle, buyerEmail, unitPrice, amount, fees,mac);
 			
 			
 			//if(status.equals("success"))
@@ -267,6 +282,15 @@ public class UserService  {
 			return response;
 			
 			
+		}
+		
+		public static void main(String[] args)  {
+			try {
+				System.out.println(URLDecoder.decode("thisisananth%40gmail.com", "UTF-8"));
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 		

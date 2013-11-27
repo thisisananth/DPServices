@@ -197,12 +197,14 @@ public class DevipuramDAO {
 
 	// Insert into payment_audit table.
 
-	public long createPaymentAudit(final Long paymentId, final int quantity,
+	public long createPaymentAudit(final String paymentId, final Integer quantity,
 			final String status, final String offerTitle,
-			final String buyerEmail, final int unitPrice, final int amount,
-			final int fees) {
+			final String buyerEmail, final Float unitPrice, final Float amount,
+			final Float fees, final String macAddr) {
+		
+		log.info("Came to this method");
 		final String INSERT_SQL = "insert into payment_audit(buyer_email,payment_id,quantity,"
-				+ "status,offer_title,unit_price,amount,fees,payment_date) values(?,?,?,?,?,?,?,?,current_timestamp)";
+				+ "status,offer_title,unit_price,amount,fees,payment_date,mac) values(?,?,?,?,?,?,?,?,current_timestamp,?)";
 
 		KeyHolder keyHolder = new GeneratedKeyHolder();
 		jdbcTemplate.update(new PreparedStatementCreator() {
@@ -211,13 +213,14 @@ public class DevipuramDAO {
 				PreparedStatement ps = connection.prepareStatement(INSERT_SQL,
 						new String[] { "id" });
 				ps.setString(1, buyerEmail);
-				ps.setLong(2, paymentId);
-				ps.setInt(3, quantity);
+				ps.setString(2, paymentId);
+				ps.setObject(3, quantity);
 				ps.setString(4, status);
 				ps.setString(5, offerTitle);
-				ps.setInt(6, unitPrice);
-				ps.setInt(7, amount);
-				ps.setInt(8, fees);
+				ps.setObject(6, unitPrice);
+				ps.setObject(7, amount);
+				ps.setObject(8, fees);
+				ps.setString(9, macAddr);
 
 				return ps;
 			}
