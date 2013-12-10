@@ -57,17 +57,17 @@ public class DevipuramDAO {
 	public static String VIDEO_1_STARTS = "select learner_id,date_created from evt_audit where evt_id=3";
 
 	// Number of people started video 2
-	public static String VIDEO_2_STARTS = "select learner_id,date_created from evt_audit where evt_id=4";
+	public static String VIDEO_2_STARTS = "select learner_id,date_created from evt_audit where evt_id=5";
 
 	// Number of people completed video 1
-	public static String VIDEO_1_ENDS = "select learner_id,date_created from evt_audit where evt_id=5";
+	public static String VIDEO_1_ENDS = "select learner_id,date_created from evt_audit where evt_id=4";
 
 	// Number of people completed video 2
 	public static String VIDEO_2_ENDS = "select learner_id,date_created from evt_audit where evt_id=6";
 
 	// Number of people who completed both videos
-	public static String ALL_VIDEOS_COMP = "select learner_id from evt_audit where evt_id=5 INTERSECT  "
-			+ "select learner_id from evt_audit where evt_id=6";
+	public static String ALL_VIDEOS_COMP = "select learner_id from evt_audit where evt_id=4 INTERSECT  "
+			+ "select learner_id from evt_audit where evt_id=6 INTERSECT" + "select learner_id from evt_audit where evt_id=8" ;
 
 	public JdbcTemplate getJdbcTemplate() {
 		return jdbcTemplate;
